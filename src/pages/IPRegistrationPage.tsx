@@ -591,6 +591,108 @@ const LicensingStep: React.FC = () => {
 };
 
 /**
+ * Estate Contract Step (only for deceased creators)
+ */
+const EstateContractStep: React.FC = () => {
+  const { formData, addBeneficiary, removeBeneficiary, updateBeneficiary, calculateTotalPercentage } = useRegistrationStore();
+
+  return (
+    <Card className="p-8">
+      <div className="mb-6">
+        <h2 className="text-2xl font-semibold text-stone-900 mb-2">
+          Estate Contract Setup
+        </h2>
+        <p className="text-stone-600">
+          Configure beneficiaries and their revenue shares from this IP.
+        </p>
+      </div>
+
+      {!formData.isDeceased ? (
+        <div className="text-center py-12">
+          <p className="text-stone-500">This step is only required for deceased creators.</p>
+        </div>
+      ) : (
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-medium text-stone-900">Beneficiaries</h3>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={addBeneficiary}
+            >
+              Add Beneficiary
+            </Button>
+          </div>
+
+          {formData.beneficiaries.length === 0 ? (
+            <div className="text-center py-8 bg-stone-50 rounded-lg">
+              <p className="text-stone-500">No beneficiaries added yet.</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {formData.beneficiaries.map((beneficiary, index) => (
+                <div key={beneficiary.id} className="p-4 border border-stone-200 rounded-lg">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <Input
+                      label="Name"
+                      placeholder="Beneficiary name"
+                      value={beneficiary.name}
+                      onChange={(e) => updateBeneficiary(beneficiary.id, { name: e.target.value })}
+                    />
+                    <Input
+                      label="Wallet Address"
+                      placeholder="0x..."
+                      value={beneficiary.walletAddress}
+                      onChange={(e) => updateBeneficiary(beneficiary.id, { walletAddress: e.target.value })}
+                    />
+                    <div className="flex items-end gap-2">
+                      <Input
+                        label="Percentage"
+                        type="number"
+                        placeholder="0"
+                        min="0"
+                        max="100"
+                        value={beneficiary.percentage.toString()}
+                        onChange={(e) => updateBeneficiary(beneficiary.id, { percentage: parseInt(e.target.value) || 0 })}
+                      />
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeBeneficiary(beneficiary.id)}
+                        className="text-red-500 hover:text-red-700"
+                      >
+                        Remove
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+              
+              <div className="p-4 bg-stone-50 rounded-lg">
+                <div className="flex justify-between items-center">
+                  <span className="text-stone-700">Total Percentage:</span>
+                  <span className={cn(
+                    "font-semibold",
+                    calculateTotalPercentage() > 100 ? "text-red-600" : "text-green-600"
+                  )}>
+                    {calculateTotalPercentage()}%
+                  </span>
+                </div>
+                {calculateTotalPercentage() > 100 && (
+                  <p className="text-red-600 text-sm mt-1">
+                    Total percentage cannot exceed 100%
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </Card>
+  );
+};
+
+/**
  * Review Step
  */
 const ReviewStep: React.FC<{ formData: any }> = ({ formData }) => {
