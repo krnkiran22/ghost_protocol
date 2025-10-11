@@ -246,6 +246,33 @@ const UploadStep: React.FC = () => {
     
     setFileAnalysis(mockAnalysis);
     updateFormData('ipfsHash', `ipfs://Qm${Math.random().toString(36).substr(2, 44)}`);
+    
+    // Automatically add relevant tags based on genre and file type
+    const { addTag } = useRegistrationStore.getState();
+    const genre = mockAnalysis.genre.toLowerCase();
+    
+    // Add genre-based tags
+    addTag(genre);
+    
+    // Add type-based tags
+    if (file.type.includes('image')) {
+      addTag('visual');
+      addTag('artwork');
+    } else if (file.type.includes('audio')) {
+      addTag('audio');
+      addTag('music');
+    } else if (file.type.includes('video')) {
+      addTag('video');
+      addTag('multimedia');
+    } else {
+      addTag('text');
+      addTag('written');
+    }
+    
+    // Add common IP tags
+    addTag('intellectual property');
+    addTag('creative work');
+    
     setAnalyzing(false);
     
     toast.success('File uploaded and analyzed successfully!');
@@ -506,8 +533,81 @@ const WorkMetadataStep: React.FC = () => {
             }}
           />
         </div>
+
+        <TagInput />
       </div>
     </Card>
+  );
+};
+
+/**
+ * Tag Input Component
+ */
+const TagInput: React.FC = () => {
+  const { formData, addTag, removeTag, errors } = useRegistrationStore();
+  const [inputValue, setInputValue] = React.useState('');
+
+  const handleAddTag = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && inputValue.trim()) {
+      e.preventDefault();
+      addTag(inputValue.trim());
+      setInputValue('');
+    }
+  };
+
+  const handleRemoveTag = (tagToRemove: string) => {
+    removeTag(tagToRemove);
+  };
+
+  return (
+    <div>
+      <label className="text-sm font-medium text-stone-700 mb-2 block">
+        Tags <span className="text-red-500">*</span>
+      </label>
+      <div className="space-y-3">
+        {/* Current Tags */}
+        {formData.tags.length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            {formData.tags.map((tag) => (
+              <span
+                key={tag}
+                className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full"
+              >
+                {tag}
+                <button
+                  onClick={() => handleRemoveTag(tag)}
+                  className="text-blue-600 hover:text-blue-800 ml-1"
+                >
+                  ×
+                </button>
+              </span>
+            ))}
+          </div>
+        )}
+        
+        {/* Tag Input */}
+        <input
+          type="text"
+          placeholder="Type a tag and press Enter (e.g. horror, classic, literature)"
+          value={inputValue}
+          onChange={(e) => setInputValue(e.target.value)}
+          onKeyDown={handleAddTag}
+          className={cn(
+            "w-full rounded-lg border border-stone-300 bg-white px-4 py-3 text-base transition-all duration-200",
+            "placeholder:text-stone-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-gold focus-visible:border-accent-gold",
+            errors.tags && "border-red-300 bg-red-50"
+          )}
+        />
+        
+        <p className="text-xs text-stone-500">
+          Press Enter to add tags. Min 3 chars, max 20 chars, up to 10 tags.
+        </p>
+        
+        {errors.tags && (
+          <p className="text-red-600 text-sm">{errors.tags}</p>
+        )}
+      </div>
+    </div>
   );
 };
 

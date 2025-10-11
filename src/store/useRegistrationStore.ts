@@ -383,8 +383,13 @@ export const useRegistrationStore = create<RegistrationState>((set, get) => ({
           isValid = false;
         }
         if (formData.tags.length === 0) {
-          setError('tags', 'At least one tag is required');
-          isValid = false;
+          // Auto-add default tag if none exist
+          const { addTag } = get();
+          if (formData.fileAnalysis?.genre) {
+            addTag(formData.fileAnalysis.genre.toLowerCase());
+          } else {
+            addTag('creative work');
+          }
         }
         break;
         
