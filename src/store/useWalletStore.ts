@@ -4,67 +4,76 @@ import { persist } from 'zustand/middleware';
 export interface WalletState {
   // Connection state
   isConnected: boolean;
-  address: string | null;
-  chainId: number | null;
-  isConnecting: boolean;
+  address: string | undefined;
+  chainId: number | undefined;
+  balance: bigint | undefined;
   
   // UI state
-  showConnectionModal: boolean;
+  isConnecting: boolean;
+  isWalletModalOpen: boolean;
   
   // Actions
-  setConnected: (address: string, chainId: number) => void;
-  setDisconnected: () => void;
+  setConnectionState: (state: Partial<WalletState>) => void;
   setConnecting: (connecting: boolean) => void;
-  toggleConnectionModal: (show?: boolean) => void;
+  openWalletModal: () => void;
+  closeWalletModal: () => void;
+  disconnect: () => void;
 }
 
 /**
  * Zustand store for wallet connection state
  * Persists connection preference to localStorage
  */
+/**
+ * Zustand store for wallet connection state
+ */
 export const useWalletStore = create<WalletState>()(
   persist(
     (set, get) => ({
       // Initial state
       isConnected: false,
-      address: null,
-      chainId: null,
+      address: undefined,
+      chainId: undefined,
+      balance: undefined,
       isConnecting: false,
-      showConnectionModal: false,
+      isWalletModalOpen: false,
 
       // Actions
-      setConnected: (address: string, chainId: number) => {
-        set({
-          isConnected: true,
-          address,
-          chainId,
-          isConnecting: false,
-        });
-      },
-
-      setDisconnected: () => {
-        set({
-          isConnected: false,
-          address: null,
-          chainId: null,
-          isConnecting: false,
-        });
+      setConnectionState: (newState) => {
+        set((state) => ({
+          ...state,
+          ...newState,
+        }));
       },
 
       setConnecting: (connecting: boolean) => {
         set({ isConnecting: connecting });
       },
 
-      toggleConnectionModal: (show?: boolean) => {
-        const currentShow = get().showConnectionModal;
-        set({ showConnectionModal: show !== undefined ? show : !currentShow });
+      openWalletModal: () => {
+        set({ isWalletModalOpen: true });
+      },
+
+      closeWalletModal: () => {
+        set({ isWalletModalOpen: false });
+      },
+
+      disconnect: () => {
+        set({
+          isConnected: false,
+          address: undefined,
+          chainId: undefined,
+          balance: undefined,
+          isConnecting: false,
+        });
       },
     }),
     {
-      name: 'ghost-protocol-wallet',
-      // Only persist connection preference, not sensitive data
-      partialize: () => ({ 
-        // Don't persist actual connection data for security
+      name: 'wallet-storage',
+      partialize: (state) => ({
+        address: state.address,
+        chainId: state.chainId,
+        isConnected: state.isConnected,
       }),
     }
   )

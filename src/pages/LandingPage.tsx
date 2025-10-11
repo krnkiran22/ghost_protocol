@@ -13,6 +13,60 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui';
 import { animations } from '@/lib/design-system';
+import { useWalletStore } from '@/store/useWalletStore';
+import { useAccount } from 'wagmi';
+
+/**
+ * Navigation Header Component
+ */
+const NavigationHeader: React.FC = () => {
+  const { openWalletModal } = useWalletStore();
+  const { isConnected, address } = useAccount();
+
+  const formatAddress = (addr: string) => {
+    return `${addr.slice(0, 6)}...${addr.slice(-4)}`;
+  };
+
+  return (
+    <nav className="relative z-20 w-full px-8 py-6">
+      <div className="max-w-7xl mx-auto flex items-center justify-between">
+        <div className="flex items-center gap-8">
+          <h1 className="text-xl font-bold text-stone-900">Ghost Protocol</h1>
+          <div className="hidden md:flex items-center gap-6">
+            <a href="#problem" className="text-stone-600 hover:text-stone-900 transition-colors">
+              The Problem
+            </a>
+            <a href="#solution" className="text-stone-600 hover:text-stone-900 transition-colors">
+              Solution
+            </a>
+            <a href="#timeline" className="text-stone-600 hover:text-stone-900 transition-colors">
+              Roadmap
+            </a>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-4">
+          {isConnected && address ? (
+            <Button
+              variant="outline"
+              onClick={openWalletModal}
+              className="font-mono text-sm"
+            >
+              {formatAddress(address)}
+            </Button>
+          ) : (
+            <Button
+              variant="primary"
+              onClick={openWalletModal}
+            >
+              Connect Wallet
+            </Button>
+          )}
+        </div>
+      </div>
+    </nav>
+  );
+};
 
 /**
  * Main Landing Page Component
@@ -37,14 +91,18 @@ const HeroSection: React.FC = () => {
   const navigate = useNavigate();
   
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-b from-background-primary to-background-secondary">
+    <section className="relative min-h-screen flex flex-col overflow-hidden bg-gradient-to-b from-background-primary to-background-secondary">
+      {/* Navigation Header */}
+      <NavigationHeader />
+      
       {/* Animated Background - Particle System Placeholder */}
       <div className="absolute inset-0 opacity-30">
         <ParticleBackground />
       </div>
-
-      {/* Content */}
-      <div className="relative z-10 max-w-4xl mx-auto px-8 text-center">
+      
+      {/* Hero Content */}
+      <div className="flex-1 flex items-center justify-center">
+        <div className="relative z-10 max-w-4xl mx-auto px-8 text-center">
         <motion.h1
           initial={animations.slideUp.initial}
           animate={animations.slideUp.animate}
@@ -92,6 +150,7 @@ const HeroSection: React.FC = () => {
             Read the Manifesto →
           </button>
         </motion.div>
+        </div>
       </div>
     </section>
   );
