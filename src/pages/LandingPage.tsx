@@ -15,6 +15,13 @@ import { Button } from '@/components/ui';
 import { animations } from '@/lib/design-system';
 import { useWalletStore } from '@/store/useWalletStore';
 import { useAccount } from 'wagmi';
+import { ParticleBackground } from '@/components/ParticleBackground';
+import { 
+  ScrollProgress, 
+  FloatingElement, 
+  RevealOnScroll, 
+  HoverEffect 
+} from '@/components/animations';
 
 /**
  * Navigation Header Component
@@ -28,39 +35,55 @@ const NavigationHeader: React.FC = () => {
   };
 
   return (
-    <nav className="relative z-20 w-full px-8 py-6">
+    <nav className="relative z-20 w-full px-8 py-6 bg-background-primary/80 backdrop-blur-md">
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         <div className="flex items-center gap-8">
-          <h1 className="text-xl font-bold text-stone-900">Ghost Protocol</h1>
+          <motion.h1 
+            className="text-xl font-bold text-stone-900"
+            whileHover={{ scale: 1.05 }}
+            transition={{ type: "spring", stiffness: 300 }}
+          >
+            Ghost Protocol
+          </motion.h1>
           <div className="hidden md:flex items-center gap-6">
-            <a href="#problem" className="text-stone-600 hover:text-stone-900 transition-colors">
-              The Problem
-            </a>
-            <a href="#solution" className="text-stone-600 hover:text-stone-900 transition-colors">
-              Solution
-            </a>
-            <a href="#timeline" className="text-stone-600 hover:text-stone-900 transition-colors">
-              Roadmap
-            </a>
+            {[
+              { href: "#problem", label: "The Problem" },
+              { href: "#solution", label: "Solution" },
+              { href: "#timeline", label: "Roadmap" }
+            ].map((link) => (
+              <motion.a
+                key={link.href}
+                href={link.href}
+                className="text-stone-600 hover:text-stone-900 transition-colors"
+                whileHover={{ y: -2 }}
+                transition={{ type: "spring", stiffness: 300 }}
+              >
+                {link.label}
+              </motion.a>
+            ))}
           </div>
         </div>
 
         <div className="flex items-center gap-4">
           {isConnected && address ? (
-            <Button
-              variant="outline"
-              onClick={openWalletModal}
-              className="font-mono text-sm"
-            >
-              {formatAddress(address)}
-            </Button>
+            <HoverEffect scale={1.02}>
+              <Button
+                variant="outline"
+                onClick={openWalletModal}
+                className="font-mono text-sm"
+              >
+                {formatAddress(address)}
+              </Button>
+            </HoverEffect>
           ) : (
-            <Button
-              variant="primary"
-              onClick={openWalletModal}
-            >
-              Connect Wallet
-            </Button>
+            <HoverEffect scale={1.05} glow>
+              <Button
+                variant="primary"
+                onClick={openWalletModal}
+              >
+                Connect Wallet
+              </Button>
+            </HoverEffect>
           )}
         </div>
       </div>
@@ -74,6 +97,7 @@ const NavigationHeader: React.FC = () => {
 export const LandingPage: React.FC = () => {
   return (
     <main className="min-h-screen">
+      <ScrollProgress />
       <HeroSection />
       <ProblemStatementSection />
       <SolutionCardsSection />
@@ -95,9 +119,9 @@ const HeroSection: React.FC = () => {
       {/* Navigation Header */}
       <NavigationHeader />
       
-      {/* Animated Background - Particle System Placeholder */}
+      {/* Animated Background - Particle System */}
       <div className="absolute inset-0 opacity-30">
-        <ParticleBackground />
+        <ParticleBackground mouseParallax={true} />
       </div>
       
       {/* Hero Content */}
@@ -128,27 +152,35 @@ const HeroSection: React.FC = () => {
           transition={{ duration: 0.8, ease: 'easeOut', delay: 0.6 }}
           className="flex flex-col sm:flex-row gap-4 justify-center items-center"
         >
-          <Button
-            variant="primary"
-            size="lg"
-            iconRight={<ArrowRight className="h-5 w-5" />}
-            className="min-w-48"
-            onClick={() => navigate('/register')}
-          >
-            Resurrect an IP
-          </Button>
+          <HoverEffect scale={1.08} glow>
+            <Button
+              variant="primary"
+              size="lg"
+              iconRight={<ArrowRight className="h-5 w-5" />}
+              className="min-w-48"
+              onClick={() => navigate('/register')}
+            >
+              Resurrect an IP
+            </Button>
+          </HoverEffect>
 
-          <Button
-            variant="secondary"
-            size="lg"
-            className="min-w-48"
-          >
-            Explore the Graph
-          </Button>
+          <HoverEffect scale={1.05}>
+            <Button
+              variant="secondary"
+              size="lg"
+              className="min-w-48"
+            >
+              Explore the Graph
+            </Button>
+          </HoverEffect>
 
-          <button className="text-stone-600 hover:text-stone-900 underline-offset-4 hover:underline transition-colors duration-200">
+          <motion.button 
+            className="text-stone-600 hover:text-stone-900 underline-offset-4 hover:underline transition-colors duration-200"
+            whileHover={{ x: 10 }}
+            transition={{ type: "spring", stiffness: 300 }}
+          >
             Read the Manifesto →
-          </button>
+          </motion.button>
         </motion.div>
         </div>
       </div>
@@ -267,27 +299,30 @@ const SolutionCardsSection: React.FC = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {solutions.map((solution, index) => (
-            <motion.div
-              key={index}
-              initial={animations.slideUp.initial}
-              whileInView={animations.slideUp.animate}
-              viewport={{ once: true }}
-              transition={{ delay: index * 0.1, duration: 0.5 }}
-              className="group p-8 bg-white border border-stone-200 rounded-2xl hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer"
-            >
-              <div className="text-accent-gold mb-4 group-hover:scale-110 transition-transform duration-300">
-                {solution.icon}
-              </div>
-              <h3 className="text-2xl font-semibold text-stone-900 mb-4">
-                {solution.title}
-              </h3>
-              <p className="text-base text-stone-600 leading-relaxed mb-6">
-                {solution.description}
-              </p>
-              <button className="text-stone-700 hover:text-accent-gold transition-colors duration-200 flex items-center gap-2">
-                Learn more <ArrowRight className="h-4 w-4" />
-              </button>
-            </motion.div>
+            <RevealOnScroll key={index} delay={index * 0.1}>
+              <HoverEffect scale={1.02} glow className="h-full">
+                <FloatingElement delay={index * 0.3}>
+                  <div className="group p-8 bg-white border border-stone-200 rounded-2xl hover:shadow-xl transition-all duration-300 cursor-pointer h-full flex flex-col">
+                    <div className="text-accent-gold mb-4 group-hover:scale-110 transition-transform duration-300">
+                      {solution.icon}
+                    </div>
+                    <h3 className="text-2xl font-semibold text-stone-900 mb-4">
+                      {solution.title}
+                    </h3>
+                    <p className="text-base text-stone-600 leading-relaxed mb-6 flex-1">
+                      {solution.description}
+                    </p>
+                    <motion.button 
+                      className="text-stone-700 hover:text-accent-gold transition-colors duration-200 flex items-center gap-2"
+                      whileHover={{ x: 5 }}
+                      transition={{ type: "spring", stiffness: 300 }}
+                    >
+                      Learn more <ArrowRight className="h-4 w-4" />
+                    </motion.button>
+                  </div>
+                </FloatingElement>
+              </HoverEffect>
+            </RevealOnScroll>
           ))}
         </div>
       </div>
@@ -311,22 +346,19 @@ const StatsSection: React.FC = () => {
       <div className="max-w-7xl mx-auto px-8">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
           {stats.map((stat, index) => (
-            <motion.div
-              key={index}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: index * 0.1, duration: 0.6 }}
-              className="text-center"
-            >
-              <div className="text-6xl font-bold text-white text-accent-gold mb-2 shadow-ghost-glow">
-                <AnimatedCounter end={parseFloat(stat.number.replace(/[^0-9.]/g, ''))} />
-                {stat.number.replace(/[0-9.]/g, '')}
-              </div>
-              <p className="text-sm text-stone-400 uppercase tracking-wide">
-                {stat.label}
-              </p>
-            </motion.div>
+            <RevealOnScroll key={index} delay={index * 0.1} direction="up">
+              <HoverEffect scale={1.05} glow>
+                <div className="text-center p-6 rounded-xl bg-stone-800/30 backdrop-blur-sm border border-stone-700/50">
+                  <div className="text-6xl font-bold text-white text-accent-gold mb-2 shadow-ghost-glow">
+                    <AnimatedCounter end={parseFloat(stat.number.replace(/[^0-9.]/g, ''))} />
+                    {stat.number.replace(/[0-9.]/g, '')}
+                  </div>
+                  <p className="text-sm text-stone-400 uppercase tracking-wide">
+                    {stat.label}
+                  </p>
+                </div>
+              </HoverEffect>
+            </RevealOnScroll>
           ))}
         </div>
       </div>
@@ -482,37 +514,7 @@ const Footer: React.FC = () => {
   );
 };
 
-/**
- * Placeholder Particle Background Component
- * TODO: Implement with Three.js
- */
-const ParticleBackground: React.FC = () => {
-  return (
-    <div className="absolute inset-0">
-      {/* Animated dots */}
-      {Array.from({ length: 50 }).map((_, i) => (
-        <motion.div
-          key={i}
-          className="absolute w-1 h-1 bg-stone-300 rounded-full"
-          animate={{
-            x: [0, 100, 0],
-            y: [0, -50, 0],
-            opacity: [0.3, 0.7, 0.3],
-          }}
-          transition={{
-            duration: 3 + Math.random() * 2,
-            repeat: Number.POSITIVE_INFINITY,
-            delay: Math.random() * 2,
-          }}
-          style={{
-            left: `${Math.random() * 100}%`,
-            top: `${Math.random() * 100}%`,
-          }}
-        />
-      ))}
-    </div>
-  );
-};
+
 
 /**
  * Animated Counter Component
