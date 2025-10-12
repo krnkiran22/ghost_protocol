@@ -205,16 +205,31 @@ export default function FileUploadZone({ onUploadComplete }: FileUploadZoneProps
           </div>
         </div>
 
-        <div className="space-y-3 mb-6">
-          <div>
-            <p className="text-sm font-medium text-stone-700">Detected Title:</p>
-            <p className="text-base text-stone-900">{analysisData.title}</p>
+        <div className="space-y-4 mb-6">
+          <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+            <h4 className="font-medium text-green-900 mb-2">✅ Analysis Complete - Ready to Proceed!</h4>
+            <p className="text-sm text-green-700">
+              Your file has been uploaded to IPFS and analyzed. All required fields have been populated automatically.
+            </p>
           </div>
-          <div>
-            <p className="text-sm font-medium text-stone-700">Genre:</p>
-            <p className="text-base text-stone-900">{analysisData.genre}</p>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <p className="text-sm font-medium text-stone-700">Title:</p>
+              <p className="text-base text-stone-900">{analysisData.title}</p>
+            </div>
+            <div>
+              <p className="text-sm font-medium text-stone-700">Genre:</p>
+              <p className="text-base text-stone-900">{analysisData.genre}</p>
+            </div>
           </div>
-          {analysisData.detectedInfluences.length > 0 && (
+          
+          <div>
+            <p className="text-sm font-medium text-stone-700">Description:</p>
+            <p className="text-sm text-stone-600 mt-1 line-clamp-3">{analysisData.description}</p>
+          </div>
+          
+          {analysisData.detectedInfluences && analysisData.detectedInfluences.length > 0 && (
             <div>
               <p className="text-sm font-medium text-stone-700">Detected Influences:</p>
               <ul className="text-sm text-stone-600 mt-1">
@@ -226,6 +241,13 @@ export default function FileUploadZone({ onUploadComplete }: FileUploadZoneProps
               </ul>
             </div>
           )}
+          
+          <div>
+            <p className="text-sm font-medium text-stone-700">IPFS Storage:</p>
+            <p className="text-xs text-stone-500 font-mono">
+              {analysisData.ipfsHash?.substring(0, 20)}...
+            </p>
+          </div>
         </div>
 
         <button

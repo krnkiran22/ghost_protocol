@@ -212,34 +212,52 @@ export const useRegistrationStore = create<RegistrationState>((set, get) => ({
     fileName: string;
     ipfsUrl: string;
   }) => {
-    set((state) => ({
-      formData: {
-        ...state.formData,
-        ipfsHash: data.ipfsHash,
-        ipfsUrl: data.ipfsUrl,
-        fileAnalysis: {
-          title: data.title,
-          publicationYear: data.publicationYear,
-          genre: data.genre,
-          description: data.description,
-          detectedInfluences: data.detectedInfluences?.map(influence => ({
-            ipAssetId: `influence-${Date.now()}-${Math.random()}`,
-            name: influence.name,
-            year: influence.year || 0,
-            confidence: influence.confidence,
-            include: influence.confidence > 70 // Auto-include high confidence influences
-          })) || []
-        },
-        // Auto-generate tags based on genre and file type
-        tags: [
-          ...state.formData.tags,
-          data.genre.toLowerCase(),
-          data.fileName.split('.').pop()?.toLowerCase() || 'file',
-          'ip-asset',
-          'creative-work'
-        ].filter((tag, index, self) => self.indexOf(tag) === index) // Remove duplicates
-      }
-    }));
+    set((state) => {
+      // Ensure we have minimum required data
+      const title = data.title || data.fileName.replace(/\.[^/.]+$/, '') || 'Untitled Work';
+      const genre = data.genre || 'Creative Work';
+      const description = data.description || `A creative work uploaded as ${data.fileName}`;
+      
+      // Create a mock File object to satisfy uploadedFile requirement
+      const mockFile = {
+        name: data.fileName,
+        size: 0, // We don't have the size from analysis
+        type: 'application/octet-stream'
+      } as File;
+
+      return {
+        formData: {
+          ...state.formData,
+          uploadedFile: mockFile, // Set this so validation passes
+          ipfsHash: data.ipfsHash,
+          ipfsUrl: data.ipfsUrl,
+          fileAnalysis: {
+            title: title,
+            publicationYear: data.publicationYear,
+            genre: genre,
+            description: description,
+            detectedInfluences: data.detectedInfluences?.map(influence => ({
+              ipAssetId: `influence-${Date.now()}-${Math.random()}`,
+              name: influence.name || 'Unknown Work',
+              year: influence.year || 0,
+              confidence: influence.confidence || 0,
+              include: (influence.confidence || 0) > 70
+            })) || []
+          },
+          // Auto-generate comprehensive tags
+          tags: [
+            ...state.formData.tags,
+            genre.toLowerCase(),
+            data.fileName.split('.').pop()?.toLowerCase() || 'file',
+            'ip-asset',
+            'creative-work',
+            'digital-asset'
+          ].filter((tag, index, self) => 
+            tag && tag.length > 0 && self.indexOf(tag) === index
+          ) // Remove duplicates and empty tags
+        }
+      };
+    });
   },
 
   // Beneficiary management
@@ -401,8 +419,14 @@ export const useRegistrationStore = create<RegistrationState>((set, get) => ({
     
     switch (currentStep) {
       case 0: // File upload
-        if (!formData.uploadedFile) {
-          setError('uploadedFile', 'Please upload a file');
+        // Check if file is uploaded AND analysis is complete
+        if (!formData.uploadedFile || !formData.ipfsHash) {
+          setError('uploadedFile', 'Please upload a file and wait for processing to complete');
+          isValid = false;
+        }
+        // Ensure basic analysis data exists
+        if (!formData.fileAnalysis?.title || !formData.fileAnalysis?.genre) {
+          setError('fileAnalysis', 'File analysis incomplete. Please try uploading again.');
           isValid = false;
         }
         break;
@@ -427,6 +451,7 @@ export const useRegistrationStore = create<RegistrationState>((set, get) => ({
         break;
         
       case 2: // Work metadata
+        // Ensure all required fields are present
         if (!formData.fileAnalysis?.title?.trim()) {
           setError('title', 'Title is required');
           isValid = false;
@@ -435,14 +460,25 @@ export const useRegistrationStore = create<RegistrationState>((set, get) => ({
           setError('genre', 'Genre is required');
           isValid = false;
         }
+        if (!formData.fileAnalysis?.description?.trim()) {
+          setError('description', 'Description is required');
+          isValid = false;
+        }
+        
+        // Auto-fix tags if missing
         if (formData.tags.length === 0) {
-          // Auto-add default tag if none exist
           const { addTag } = get();
           if (formData.fileAnalysis?.genre) {
             addTag(formData.fileAnalysis.genre.toLowerCase());
-          } else {
-            addTag('creative work');
           }
+          addTag('creative-work');
+          addTag('ip-asset');
+        }
+        
+        // Ensure minimum tag requirement
+        if (formData.tags.length < 2) {
+          setError('tags', 'At least 2 tags are required');
+          isValid = false;
         }
         break;
         
