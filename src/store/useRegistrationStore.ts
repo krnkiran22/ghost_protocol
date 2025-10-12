@@ -47,6 +47,7 @@ export interface RegistrationFormData {
   // Step 2: File Upload & Analysis
   uploadedFile: File | null;
   ipfsHash: string;
+  ipfsUrl: string;
   fileAnalysis: FileAnalysis | null;
   tags: string[];
   
@@ -103,6 +104,16 @@ export interface RegistrationState {
   setUploadState: (uploading: boolean, progress?: number) => void;
   setAnalyzing: (analyzing: boolean) => void;
   setFileAnalysis: (analysis: FileAnalysis) => void;
+  handleUploadComplete: (data: { 
+    title: string;
+    publicationYear: number | null;
+    genre: string;
+    description: string;
+    detectedInfluences: any[];
+    ipfsHash: string;
+    fileName: string;
+    ipfsUrl: string;
+  }) => void;
   
   // Error management
   setError: (field: string, message: string) => void;
@@ -129,6 +140,7 @@ const initialFormData: RegistrationFormData = {
   // Step 2
   uploadedFile: null,
   ipfsHash: '',
+  ipfsUrl: '',
   fileAnalysis: null,
   tags: [],
   
@@ -186,6 +198,47 @@ export const useRegistrationStore = create<RegistrationState>((set, get) => ({
         ...state.formData,
         [key]: value,
       },
+    }));
+  },
+
+  // File upload completion handler
+  handleUploadComplete: (data: { 
+    title: string;
+    publicationYear: number | null;
+    genre: string;
+    description: string;
+    detectedInfluences: any[];
+    ipfsHash: string;
+    fileName: string;
+    ipfsUrl: string;
+  }) => {
+    set((state) => ({
+      formData: {
+        ...state.formData,
+        ipfsHash: data.ipfsHash,
+        ipfsUrl: data.ipfsUrl,
+        fileAnalysis: {
+          title: data.title,
+          publicationYear: data.publicationYear,
+          genre: data.genre,
+          description: data.description,
+          detectedInfluences: data.detectedInfluences?.map(influence => ({
+            ipAssetId: `influence-${Date.now()}-${Math.random()}`,
+            name: influence.name,
+            year: influence.year || 0,
+            confidence: influence.confidence,
+            include: influence.confidence > 70 // Auto-include high confidence influences
+          })) || []
+        },
+        // Auto-generate tags based on genre and file type
+        tags: [
+          ...state.formData.tags,
+          data.genre.toLowerCase(),
+          data.fileName.split('.').pop()?.toLowerCase() || 'file',
+          'ip-asset',
+          'creative-work'
+        ].filter((tag, index, self) => self.indexOf(tag) === index) // Remove duplicates
+      }
     }));
   },
 

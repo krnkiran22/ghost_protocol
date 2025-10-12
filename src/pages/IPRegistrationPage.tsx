@@ -8,6 +8,7 @@ import { useRegistrationStore } from '@/store/useRegistrationStore';
 import { useWalletStore } from '@/store/useWalletStore';
 import { useAccount } from 'wagmi';
 import toast from 'react-hot-toast';
+import FileUploadZone from '@/components/FileUploadZone';
 
 /**
  * IP Registration Page - Multi-step form for registering intellectual property
@@ -160,121 +161,11 @@ export const IPRegistrationPage: React.FC = () => {
  * Upload Step Component
  */
 const UploadStep: React.FC = () => {
-  const { 
-    formData, 
-    updateFormData, 
-    setUploadState, 
-    setAnalyzing, 
-    setFileAnalysis,
-    isUploading,
-    isAnalyzing,
-    errors 
-  } = useRegistrationStore();
-  
-  const [dragActive, setDragActive] = React.useState(false);
+  const { handleUploadComplete } = useRegistrationStore();
 
-  const handleDrag = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (e.type === "dragenter" || e.type === "dragover") {
-      setDragActive(true);
-    } else if (e.type === "dragleave") {
-      setDragActive(false);
-    }
-  };
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDragActive(false);
-    
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      handleFileUpload(e.dataTransfer.files[0]);
-    }
-  };
-
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      handleFileUpload(e.target.files[0]);
-    }
-  };
-
-  const handleFileUpload = async (file: File) => {
-    if (file.size > 100 * 1024 * 1024) { // 100MB
-      toast.error('File size must be less than 100MB');
-      return;
-    }
-
-    const allowedTypes = [
-      'application/pdf', 'application/msword', 'text/plain',
-      'audio/mpeg', 'audio/wav', 'video/mp4', 'video/quicktime',
-      'image/jpeg', 'image/png'
-    ];
-
-    if (!allowedTypes.includes(file.type)) {
-      toast.error('Unsupported file type');
-      return;
-    }
-
-    updateFormData('uploadedFile', file);
-    
-    // Simulate upload progress
-    setUploadState(true, 0);
-    for (let i = 0; i <= 100; i += 10) {
-      await new Promise(resolve => setTimeout(resolve, 100));
-      setUploadState(true, i);
-    }
-    setUploadState(false);
-
-    // Simulate AI analysis
-    setAnalyzing(true);
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    // Mock analysis result
-    const mockAnalysis = {
-      title: file.name.replace(/\.[^/.]+$/, "").replace(/_/g, " "),
-      publicationYear: 2020,
-      genre: file.type.includes('image') ? 'Visual Art' : 
-             file.type.includes('audio') ? 'Music' : 
-             file.type.includes('video') ? 'Film' : 'Literature',
-      description: `A creative work titled "${file.name}". This appears to be a ${file.type.includes('image') ? 'visual artwork' : file.type.includes('audio') ? 'musical composition' : file.type.includes('video') ? 'video production' : 'written work'} with potential commercial and artistic value.`,
-      detectedInfluences: [
-        { ipAssetId: '0x123', name: 'Classic Literature Style', year: 1950, confidence: 0.8, include: true },
-        { ipAssetId: '0x456', name: 'Modern Narrative Techniques', year: 1990, confidence: 0.6, include: false }
-      ]
-    };
-    
-    setFileAnalysis(mockAnalysis);
-    updateFormData('ipfsHash', `ipfs://Qm${Math.random().toString(36).substr(2, 44)}`);
-    
-    // Automatically add relevant tags based on genre and file type
-    const { addTag } = useRegistrationStore.getState();
-    const genre = mockAnalysis.genre.toLowerCase();
-    
-    // Add genre-based tags
-    addTag(genre);
-    
-    // Add type-based tags
-    if (file.type.includes('image')) {
-      addTag('visual');
-      addTag('artwork');
-    } else if (file.type.includes('audio')) {
-      addTag('audio');
-      addTag('music');
-    } else if (file.type.includes('video')) {
-      addTag('video');
-      addTag('multimedia');
-    } else {
-      addTag('text');
-      addTag('written');
-    }
-    
-    // Add common IP tags
-    addTag('intellectual property');
-    addTag('creative work');
-    
-    setAnalyzing(false);
-    
+  const handleUpload = (data: any) => {
+    handleUploadComplete(data);
+    // Show success toast
     toast.success('File uploaded and analyzed successfully!');
   };
 
@@ -289,93 +180,7 @@ const UploadStep: React.FC = () => {
         </p>
       </div>
 
-      {!formData.uploadedFile ? (
-        <div
-          className={cn(
-            "border-2 border-dashed rounded-xl p-12 text-center transition-colors cursor-pointer",
-            dragActive ? "border-blue-400 bg-blue-50" : "border-stone-300 hover:border-stone-400",
-            errors.uploadedFile && "border-red-300 bg-red-50"
-          )}
-          onDragEnter={handleDrag}
-          onDragLeave={handleDrag}
-          onDragOver={handleDrag}
-          onDrop={handleDrop}
-          onClick={() => document.getElementById('file-upload')?.click()}
-        >
-          <Upload className="h-16 w-16 text-stone-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-stone-900 mb-2">
-            Drop files here or click to browse
-          </h3>
-          <p className="text-stone-600 text-sm mb-4">
-            Supported formats: PDF, DOC, TXT, MP3, WAV, MP4, MOV, JPG, PNG
-          </p>
-          <p className="text-stone-500 text-xs">
-            Maximum file size: 100MB
-          </p>
-          
-          <input
-            id="file-upload"
-            type="file"
-            className="hidden"
-            onChange={handleFileSelect}
-            accept=".pdf,.doc,.docx,.txt,.mp3,.wav,.mp4,.mov,.jpg,.jpeg,.png"
-          />
-        </div>
-      ) : (
-        <div className="space-y-4">
-          {/* File Upload Success */}
-          <div className="flex items-center justify-between p-4 bg-green-50 border border-green-200 rounded-lg">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                <Check className="h-5 w-5 text-green-600" />
-              </div>
-              <div>
-                <span className="text-sm font-medium text-green-900">
-                  {formData.uploadedFile.name}
-                </span>
-                <p className="text-xs text-green-700">
-                  {(formData.uploadedFile.size / 1024 / 1024).toFixed(2)} MB • IPFS: {formData.ipfsHash.slice(0, 20)}...
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Analysis Status */}
-          {isAnalyzing ? (
-            <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-              <div className="flex items-center gap-3">
-                <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
-                <span className="text-sm font-medium text-blue-900">
-                  Analyzing content with AI...
-                </span>
-              </div>
-            </div>
-          ) : formData.fileAnalysis ? (
-            <div className="p-4 bg-stone-50 border border-stone-200 rounded-lg">
-              <h4 className="font-medium text-stone-900 mb-2">AI Analysis Complete</h4>
-              <div className="space-y-2 text-sm">
-                <p><strong>Detected Title:</strong> {formData.fileAnalysis.title}</p>
-                <p><strong>Genre:</strong> {formData.fileAnalysis.genre}</p>
-                <p><strong>Influences Found:</strong> {formData.fileAnalysis.detectedInfluences.length} potential matches</p>
-              </div>
-            </div>
-          ) : null}
-
-          {/* Upload Progress */}
-          {isUploading && (
-            <div className="w-full bg-stone-200 rounded-full h-2">
-              <div 
-                className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                style={{ width: `${formData.uploadedFile ? 100 : 0}%` }}
-              />
-            </div>
-          )}
-        </div>
-      )}
-
-      {errors.uploadedFile && (
-        <p className="text-red-600 text-sm mt-2">{errors.uploadedFile}</p>
-      )}
+      <FileUploadZone onUploadComplete={handleUpload} />
     </Card>
   );
 };
