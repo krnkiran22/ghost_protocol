@@ -212,11 +212,21 @@ export const useRegistrationStore = create<RegistrationState>((set, get) => ({
     fileName: string;
     ipfsUrl: string;
   }) => {
+    console.log('📦 handleUploadComplete called with data:', data);
+    
     set((state) => {
+      console.log('📋 Current state before update:', {
+        uploadedFile: state.formData.uploadedFile,
+        fileAnalysis: state.formData.fileAnalysis,
+        ipfsHash: state.formData.ipfsHash
+      });
+      
       // Ensure we have minimum required data
       const title = data.title || data.fileName.replace(/\.[^/.]+$/, '') || 'Untitled Work';
       const genre = data.genre || 'Creative Work';
       const description = data.description || `A creative work uploaded as ${data.fileName}`;
+      
+      console.log('✨ Processed data:', { title, genre, description });
       
       // Create a mock File object to satisfy uploadedFile requirement
       const mockFile = {
@@ -225,38 +235,53 @@ export const useRegistrationStore = create<RegistrationState>((set, get) => ({
         type: 'application/octet-stream'
       } as File;
 
-      return {
-        formData: {
-          ...state.formData,
-          uploadedFile: mockFile, // Set this so validation passes
-          ipfsHash: data.ipfsHash,
-          ipfsUrl: data.ipfsUrl,
-          fileAnalysis: {
-            title: title,
-            publicationYear: data.publicationYear,
-            genre: genre,
-            description: description,
-            detectedInfluences: data.detectedInfluences?.map(influence => ({
-              ipAssetId: `influence-${Date.now()}-${Math.random()}`,
-              name: influence.name || 'Unknown Work',
-              year: influence.year || 0,
-              confidence: influence.confidence || 0,
-              include: (influence.confidence || 0) > 70
-            })) || []
-          },
-          // Auto-generate comprehensive tags
-          tags: [
-            ...state.formData.tags,
-            genre.toLowerCase(),
-            data.fileName.split('.').pop()?.toLowerCase() || 'file',
-            'ip-asset',
-            'creative-work',
-            'digital-asset'
-          ].filter((tag, index, self) => 
-            tag && tag.length > 0 && self.indexOf(tag) === index
-          ) // Remove duplicates and empty tags
-        }
+      const newFileAnalysis = {
+        title: title,
+        publicationYear: data.publicationYear,
+        genre: genre,
+        description: description,
+        detectedInfluences: data.detectedInfluences?.map(influence => ({
+          ipAssetId: `influence-${Date.now()}-${Math.random()}`,
+          name: influence.name || 'Unknown Work',
+          year: influence.year || 0,
+          confidence: influence.confidence || 0,
+          include: (influence.confidence || 0) > 70
+        })) || []
       };
+      
+      console.log('🔧 Created fileAnalysis object:', newFileAnalysis);
+
+      const updatedFormData = {
+        ...state.formData,
+        uploadedFile: mockFile, // Set this so validation passes
+        ipfsHash: data.ipfsHash,
+        ipfsUrl: data.ipfsUrl,
+        fileAnalysis: newFileAnalysis,
+        // Auto-generate comprehensive tags
+        tags: [
+          ...state.formData.tags,
+          genre.toLowerCase(),
+          data.fileName.split('.').pop()?.toLowerCase() || 'file',
+          'ip-asset',
+          'creative-work',
+          'digital-asset'
+        ].filter((tag, index, self) => 
+          tag && tag.length > 0 && self.indexOf(tag) === index
+        ) // Remove duplicates and empty tags
+      };
+      
+      console.log('📤 Final updated formData:', updatedFormData);
+      
+      return { formData: updatedFormData };
+    });
+    
+    // Verify the state was updated correctly
+    const newState = get();
+    console.log('✅ State after update:', {
+      hasUploadedFile: !!newState.formData.uploadedFile,
+      hasFileAnalysis: !!newState.formData.fileAnalysis,
+      analysisTitle: newState.formData.fileAnalysis?.title,
+      analysisGenre: newState.formData.fileAnalysis?.genre
     });
   },
 
@@ -415,20 +440,42 @@ export const useRegistrationStore = create<RegistrationState>((set, get) => ({
     const { currentStep, formData, setError, clearAllErrors } = get();
     clearAllErrors();
     
+    console.log('🔍 VALIDATION DEBUG - Step:', currentStep, 'FormData:', {
+      uploadedFile: !!formData.uploadedFile,
+      ipfsHash: !!formData.ipfsHash,
+      fileAnalysis: formData.fileAnalysis,
+      tags: formData.tags,
+      fileName: formData.uploadedFile?.name
+    });
+    
     let isValid = true;
     
     switch (currentStep) {
       case 0: // File upload
+        console.log('📋 Validating Step 0 (File Upload)');
+        
         // Check if file is uploaded AND analysis is complete
         if (!formData.uploadedFile || !formData.ipfsHash) {
+          console.log('❌ Missing file or IPFS hash:', {
+            hasFile: !!formData.uploadedFile,
+            hasHash: !!formData.ipfsHash
+          });
           setError('uploadedFile', 'Please upload a file and wait for processing to complete');
           isValid = false;
         }
+        
         // Ensure basic analysis data exists
         if (!formData.fileAnalysis?.title || !formData.fileAnalysis?.genre) {
+          console.log('❌ Missing analysis data:', {
+            hasTitle: !!formData.fileAnalysis?.title,
+            hasGenre: !!formData.fileAnalysis?.genre,
+            analysis: formData.fileAnalysis
+          });
           setError('fileAnalysis', 'File analysis incomplete. Please try uploading again.');
           isValid = false;
         }
+        
+        console.log('✅ Step 0 validation result:', isValid ? 'PASS' : 'FAIL');
         break;
         
       case 1: // Creator details
