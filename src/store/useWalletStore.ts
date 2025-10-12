@@ -20,6 +20,7 @@ export interface WalletState {
   disconnect: () => void;
 }
 
+
 /**
  * Zustand store for wallet connection state
  * Persists connection preference to localStorage
