@@ -7,6 +7,7 @@ import { Toaster } from 'react-hot-toast';
 import { config } from '@/lib/wagmi';
 import { LandingPage } from '@/pages/LandingPage';
 import { IPRegistrationPage } from '@/pages/IPRegistrationPage';
+import { SuccessPage } from '@/pages/SuccessPage';
 import { WalletConnectionModal } from '@/components/WalletConnectionModal';
 import './index.css';
 
@@ -21,6 +22,7 @@ function App() {
           <Routes>
             <Route path="/" element={<LandingPage />} />
             <Route path="/register" element={<IPRegistrationPage />} />
+            <Route path="/success" element={<SuccessPage />} />
           </Routes>
           
           {/* Global Components */}

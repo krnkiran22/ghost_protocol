@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, Upload, Check, AlertCircle } from 'lucide-react';
@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils';
 import { useRegistrationStore } from '@/store/useRegistrationStore';
 import { useWalletStore } from '@/store/useWalletStore';
 import { useAccount } from 'wagmi';
+import { useRegistration } from '@/hooks/useRegistration';
 import toast from 'react-hot-toast';
 import FileUploadZone from '@/components/FileUploadZone';
 
@@ -16,21 +17,19 @@ import FileUploadZone from '@/components/FileUploadZone';
 export const IPRegistrationPage: React.FC = () => {
   const navigate = useNavigate();
   const { isConnected, address } = useAccount();
-  const { openWalletModal } = useWalletStore();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Blockchain registration hook
+  const { handleCompleteRegistration, isPending, isPlagiarized } = useRegistration();
   
   // Registration store
   const {
     currentStep,
-    setStep,
     nextStep: storeNextStep,
     prevStep: storePrevStep,
     formData,
     updateFormData,
-    errors,
     validateCurrentStep,
-    canProceed,
-    isUploading,
-    isAnalyzing,
   } = useRegistrationStore();
 
   const steps = [
@@ -50,11 +49,39 @@ export const IPRegistrationPage: React.FC = () => {
     }
   }, [isConnected, address, updateFormData]);
 
-  const handleNextStep = () => {
-    if (validateCurrentStep()) {
-      storeNextStep();
-    } else {
+  const handleNextStep = async () => {
+    // Validate current step
+    if (!validateCurrentStep()) {
       toast.error('Please complete all required fields');
+      return;
+    }
+
+    // If this is the last step, submit to blockchain
+    if (currentStep === steps.length - 1) {
+      setIsSubmitting(true);
+      toast.loading('Submitting to Story Protocol blockchain...', { id: 'blockchain-submit' });
+      
+      const result = await handleCompleteRegistration();
+      
+      toast.dismiss('blockchain-submit');
+      setIsSubmitting(false);
+
+      if (result.success) {
+        // Show success modal/page with transaction details
+        toast.success('✨ Successfully registered on Story Protocol!', {
+          duration: 6000,
+        });
+        
+        // Navigate to success page or show modal
+        setTimeout(() => {
+          navigate(`/success?tx=${result.txHash}&id=${result.ipAssetId}`);
+        }, 2000);
+      } else {
+        toast.error(`Registration failed: ${result.error || 'Unknown error'}`);
+      }
+    } else {
+      // Just move to next step
+      storeNextStep();
     }
   };
 
@@ -64,6 +91,32 @@ export const IPRegistrationPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-background-primary">
+      {/* Wallet Connection Warning */}
+      {!isConnected && (
+        <div className="bg-amber-50 border-b border-amber-200 px-8 py-3">
+          <div className="max-w-7xl mx-auto flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <AlertCircle className="h-5 w-5 text-amber-600" />
+              <span className="text-sm text-amber-900">
+                Please connect your wallet to Story Protocol network to continue
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Plagiarism Warning */}
+      {isPlagiarized && formData.ipfsHash && (
+        <div className="bg-red-50 border-b border-red-200 px-8 py-3">
+          <div className="max-w-7xl mx-auto flex items-center gap-2">
+            <AlertCircle className="h-5 w-5 text-red-600" />
+            <span className="text-sm text-red-900">
+              ⚠️ This content appears to be already registered on the blockchain
+            </span>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <header className="sticky top-0 z-50 bg-white border-b border-stone-200">
         <div className="max-w-7xl mx-auto px-8 py-6">
@@ -146,10 +199,11 @@ export const IPRegistrationPage: React.FC = () => {
           <Button
             variant="primary"
             onClick={handleNextStep}
-            disabled={!isConnected}
+            disabled={!isConnected || isSubmitting}
             iconRight={<ArrowRight className="h-4 w-4" />}
+            loading={isSubmitting}
           >
-            {currentStep === steps.length - 1 ? 'Submit Registration' : 'Next'}
+            {currentStep === steps.length - 1 ? (isSubmitting ? 'Submitting to Blockchain...' : 'Submit to Story Protocol') : 'Next'}
           </Button>
         </div>
       </div>
