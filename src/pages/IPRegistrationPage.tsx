@@ -8,6 +8,7 @@ import { useRegistrationStore } from '@/store/useRegistrationStore';
 import { useWalletStore } from '@/store/useWalletStore';
 import { useAccount } from 'wagmi';
 import { useRegistration } from '@/hooks/useRegistration';
+import { useNetworkCheck } from '@/hooks/useNetworkCheck';
 import toast from 'react-hot-toast';
 import FileUploadZone from '@/components/FileUploadZone';
 
@@ -19,8 +20,11 @@ export const IPRegistrationPage: React.FC = () => {
   const { isConnected, address } = useAccount();
   const [isSubmitting, setIsSubmitting] = useState(false);
   
+  // Network check hook
+  const { isCorrectNetwork, switchToStory, isPending: isSwitching } = useNetworkCheck();
+  
   // Blockchain registration hook
-  const { handleCompleteRegistration, isPending, isPlagiarized } = useRegistration();
+  const { handleCompleteRegistration, isPlagiarized } = useRegistration();
   
   // Registration store
   const {
@@ -91,6 +95,28 @@ export const IPRegistrationPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-background-primary">
+      {/* Wrong Network Warning */}
+      {isConnected && !isCorrectNetwork && (
+        <div className="bg-orange-50 border-b border-orange-200 px-8 py-3">
+          <div className="max-w-7xl mx-auto flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <AlertCircle className="h-5 w-5 text-orange-600" />
+              <span className="text-sm text-orange-900">
+                You're connected to the wrong network. Please switch to Story Protocol Odyssey Testnet.
+              </span>
+            </div>
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={switchToStory}
+              disabled={isSwitching}
+            >
+              {isSwitching ? 'Switching...' : 'Switch Network'}
+            </Button>
+          </div>
+        </div>
+      )}
+      
       {/* Wallet Connection Warning */}
       {!isConnected && (
         <div className="bg-amber-50 border-b border-amber-200 px-8 py-3">
