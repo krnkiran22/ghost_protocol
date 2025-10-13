@@ -202,6 +202,8 @@ export const useRegistrationStore = create<RegistrationState>((set, get) => ({
   },
 
   
+  
+  
   // File upload completion handler
   handleUploadComplete: (data: { 
     title: string;
