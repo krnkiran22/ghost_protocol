@@ -8,6 +8,8 @@ import { config } from '@/lib/wagmi';
 import { LandingPage } from '@/pages/LandingPage';
 import { IPRegistrationPage } from '@/pages/IPRegistrationPage';
 import { SuccessPage } from '@/pages/SuccessPage';
+import { InfluenceGraphPage } from '@/pages/InfluenceGraphPage';
+import { GhostWalletDashboard } from '@/pages/GhostWalletDashboard';
 import { WalletConnectionModal } from '@/components/WalletConnectionModal';
 import './index.css';
 
@@ -23,6 +25,8 @@ function App() {
             <Route path="/" element={<LandingPage />} />
             <Route path="/register" element={<IPRegistrationPage />} />
             <Route path="/success" element={<SuccessPage />} />
+            <Route path="/influence-graph" element={<InfluenceGraphPage />} />
+            <Route path="/dashboard" element={<GhostWalletDashboard />} />
           </Routes>
           
           {/* Global Components */}

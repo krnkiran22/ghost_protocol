@@ -1,15 +1,19 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { CheckCircle, ExternalLink, Home } from 'lucide-react';
+import { CheckCircle, ExternalLink, Home, Twitter, Repeat } from 'lucide-react';
 import { Button, Card } from '@/components/ui';
 import { motion } from 'framer-motion';
+import confetti from 'canvas-confetti';
+import { useRegistrationStore } from '@/store/useRegistrationStore';
 
 /**
  * Success Page - Shown after successful IP registration
+ * Now with confetti animation and sharing options
  */
 export const SuccessPage: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const { reset } = useRegistrationStore();
   
   const txHash = searchParams.get('tx');
   const ipAssetId = searchParams.get('id');
@@ -17,17 +21,65 @@ export const SuccessPage: React.FC = () => {
 
   const explorerUrl = `https://odyssey.storyscan.io/tx/${txHash}`;
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-stone-50 via-amber-50 to-stone-100 flex items-center justify-center px-4">
+  // Trigger confetti on mount
+  useEffect(() => {
+    const duration = 3000;
+    const animationEnd = Date.now() + duration;
+    const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+
+    function randomInRange(min: number, max: number) {
+      return Math.random() * (max - min) + min;
+    }
+
+    const interval = setInterval(function() {
+      const timeLeft = animationEnd - Date.now();
+
+      if (timeLeft <= 0) {
+        return clearInterval(interval);
+      }
+
+      const particleCount = 50 * (timeLeft / duration);
       
+      // Gold confetti from left
+      confetti({
+        ...defaults,
+        particleCount,
+        origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 },
+        colors: ['#D4AF37', '#CD7F32', '#FFD700']
+      });
+      
+      // Gold confetti from right
+      confetti({
+        ...defaults,
+        particleCount,
+        origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 },
+        colors: ['#D4AF37', '#CD7F32', '#FFD700']
+      });
+    }, 250);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleRegisterAnother = () => {
+    reset();
+    navigate('/register');
+  };
+
+  const handleShareTwitter = () => {
+    const text = `I just registered my IP on Ghost Protocol! 👻✨ Ensuring eternal royalties for creators on @StoryProtocol blockchain. #GhostProtocol #Web3`;
+    const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
+    window.open(url, '_blank');
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-stone-50 via-amber-50 to-stone-100 flex items-center justify-center px-4 py-8">\n      
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.5 }}
         className="w-full max-w-2xl"
       >
-        <Card className="p-12 text-center">
-          <motion.div
+        <Card className="p-12 text-center shadow-2xl">\n          <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
@@ -42,7 +94,7 @@ export const SuccessPage: React.FC = () => {
             transition={{ delay: 0.3 }}
             className="text-4xl font-bold text-stone-900 mb-4"
           >
-            🎉 IP Asset Successfully Registered!
+            ✨ IP Asset Successfully Registered!
           </motion.h1>
 
           <motion.p

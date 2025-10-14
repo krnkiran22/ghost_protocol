@@ -49,17 +49,30 @@ const NavigationHeader: React.FC = () => {
             {[
               { href: "#problem", label: "The Problem" },
               { href: "#solution", label: "Solution" },
+              { href: "/influence-graph", label: "Influence Graph", isRoute: true },
               { href: "#timeline", label: "Roadmap" }
             ].map((link) => (
-              <motion.a
-                key={link.href}
-                href={link.href}
-                className="text-stone-600 hover:text-stone-900 transition-colors"
-                whileHover={{ y: -2 }}
-                transition={{ type: "spring", stiffness: 300 }}
-              >
-                {link.label}
-              </motion.a>
+              link.isRoute ? (
+                <motion.button
+                  key={link.href}
+                  onClick={() => window.location.href = link.href}
+                  className="text-stone-600 hover:text-stone-900 transition-colors"
+                  whileHover={{ y: -2 }}
+                  transition={{ type: "spring", stiffness: 300 }}
+                >
+                  {link.label}
+                </motion.button>
+              ) : (
+                <motion.a
+                  key={link.href}
+                  href={link.href}
+                  className="text-stone-600 hover:text-stone-900 transition-colors"
+                  whileHover={{ y: -2 }}
+                  transition={{ type: "spring", stiffness: 300 }}
+                >
+                  {link.label}
+                </motion.a>
+              )
             ))}
           </div>
         </div>
@@ -169,6 +182,7 @@ const HeroSection: React.FC = () => {
               variant="secondary"
               size="lg"
               className="min-w-48"
+              onClick={() => navigate('/influence-graph')}
             >
               Explore the Graph
             </Button>
