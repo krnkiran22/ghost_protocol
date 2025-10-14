@@ -5,7 +5,6 @@ dotenv.config();
 const requiredVars = ['PINATA_API_KEY', 'PINATA_SECRET_KEY', 'GROQ_API_KEY'];
 const missingVars = requiredVars.filter(varName => !process.env[varName]);
 
-
 if (missingVars.length > 0) {
   console.error('❌ Missing required environment variables:');
   missingVars.forEach(varName => {
