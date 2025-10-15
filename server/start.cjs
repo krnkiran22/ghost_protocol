@@ -19,8 +19,6 @@ if (missingVars.length > 0) {
   console.error('   Groq: https://console.groq.com/');
   process.exit(1);
 }
-
-
 console.log('✅ All environment variables are configured');
 
 // Import and start the server
