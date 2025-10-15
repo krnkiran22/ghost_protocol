@@ -20,6 +20,7 @@ if (missingVars.length > 0) {
   process.exit(1);
 }
 
+
 console.log('✅ All environment variables are configured');
 
 // Import and start the server
