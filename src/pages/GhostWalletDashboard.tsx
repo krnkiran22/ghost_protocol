@@ -14,6 +14,7 @@ import {
 import { Button, Card } from '@/components/ui';
 import { useAccount } from 'wagmi';
 import { STORY_NETWORK } from '@/lib/contracts/addresses';
+import { useAllGhostWallets } from '@/hooks/useGhostWalletData';
 
 // Mock Ghost Wallet data (replace with real contract calls)
 interface GhostWallet {
@@ -47,13 +48,17 @@ interface IPAsset {
  * 
  * View and manage Ghost Wallets created for deceased creators
  * Shows earnings, beneficiaries, and activity logs
+ * NOW USES REAL BLOCKCHAIN DATA!
  */
 export const GhostWalletDashboard: React.FC = () => {
   const navigate = useNavigate();
-  const { address, isConnected } = useAccount();
+  const { isConnected } = useAccount();
   const [selectedWallet, setSelectedWallet] = useState<GhostWallet | null>(null);
+  
+  // Fetch real blockchain data
+  const { wallets: blockchainWallets, totalCount, isLoading: loadingWallets } = useAllGhostWallets();
 
-  // Mock data - replace with actual blockchain queries
+  // Mock data - fallback for demo
   const mockWallets: GhostWallet[] = [
     {
       address: '0xGHO5T742bd8e9f3a1c5d6e8f9a2b3c4d5e6',
@@ -105,6 +110,18 @@ export const GhostWalletDashboard: React.FC = () => {
     { id: '2', title: 'The Jewel of Seven Stars', derivatives: 87, earnings: 52394 },
     { id: '3', title: 'The Lair of the White Worm', derivatives: 42, earnings: 52060 },
   ];
+  
+  // Use blockchain data if available, otherwise fallback to mock
+  const displayWallets = totalCount > 0 ? blockchainWallets : mockWallets;
+  const isUsingRealData = totalCount > 0;
+  
+  // Calculate stats from wallet data
+  const stats = {
+    totalWallets: displayWallets.length,
+    totalEarnings: displayWallets.reduce((sum, w) => sum + w.totalEarnings, 0),
+    monthlyEarnings: displayWallets.reduce((sum, w) => sum + w.thisMonthEarnings, 0),
+    totalBeneficiaries: displayWallets.reduce((sum, w) => sum + w.beneficiariesCount, 0),
+  };
 
   if (!isConnected) {
     return (
@@ -149,13 +166,30 @@ export const GhostWalletDashboard: React.FC = () => {
                 <p className="text-sm text-stone-600">Administering eternal IP rights</p>
               </div>
             </div>
-            <Button
-              variant="primary"
-              size="sm"
-              onClick={() => navigate('/register')}
-            >
-              + Create New Ghost Wallet
-            </Button>
+            <div className="flex items-center gap-3">
+              {loadingWallets && (
+                <span className="text-sm text-stone-500 animate-pulse">
+                  Loading blockchain data...
+                </span>
+              )}
+              {isUsingRealData && (
+                <span className="text-sm text-green-600">
+                  ✓ Live from blockchain ({totalCount} wallets)
+                </span>
+              )}
+              {!isUsingRealData && !loadingWallets && (
+                <span className="text-sm text-amber-600">
+                  Demo mode - No wallets found on chain
+                </span>
+              )}
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={() => navigate('/register')}
+              >
+                + Create New Ghost Wallet
+              </Button>
+            </div>
           </div>
         </div>
       </header>
@@ -168,7 +202,7 @@ export const GhostWalletDashboard: React.FC = () => {
               <p className="text-sm text-stone-600">Total Ghost Wallets</p>
               <Wallet className="h-5 w-5 text-gold" />
             </div>
-            <p className="text-3xl font-bold text-stone-900">{mockWallets.length}</p>
+            <p className="text-3xl font-bold text-stone-900">{stats.totalWallets}</p>
           </Card>
 
           <Card className="p-6">
@@ -177,7 +211,7 @@ export const GhostWalletDashboard: React.FC = () => {
               <DollarSign className="h-5 w-5 text-green-600" />
             </div>
             <p className="text-3xl font-bold text-stone-900">
-              ${mockWallets.reduce((sum, w) => sum + w.totalEarnings, 0).toLocaleString()}
+              ${stats.totalEarnings.toLocaleString()}
             </p>
           </Card>
 
@@ -187,7 +221,7 @@ export const GhostWalletDashboard: React.FC = () => {
               <TrendingUp className="h-5 w-5 text-blue-600" />
             </div>
             <p className="text-3xl font-bold text-stone-900">
-              ${mockWallets.reduce((sum, w) => sum + w.thisMonthEarnings, 0).toLocaleString()}
+              ${stats.monthlyEarnings.toLocaleString()}
             </p>
             <p className="text-xs text-green-600 mt-1">↑ 23% from last month</p>
           </Card>
@@ -198,14 +232,14 @@ export const GhostWalletDashboard: React.FC = () => {
               <Users className="h-5 w-5 text-purple-600" />
             </div>
             <p className="text-3xl font-bold text-stone-900">
-              {mockWallets.reduce((sum, w) => sum + w.beneficiariesCount, 0)}
+              {stats.totalBeneficiaries}
             </p>
           </Card>
         </div>
 
         {/* Ghost Wallets List */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {mockWallets.map((wallet) => (
+          {displayWallets.map((wallet) => (
             <motion.div
               key={wallet.address}
               initial={{ opacity: 0, y: 20 }}

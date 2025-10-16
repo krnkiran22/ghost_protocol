@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { CheckCircle, ExternalLink, Home, Twitter, Repeat } from 'lucide-react';
+import { CheckCircle, ExternalLink, Home } from 'lucide-react';
 import { Button, Card } from '@/components/ui';
 import { motion } from 'framer-motion';
 import confetti from 'canvas-confetti';
@@ -13,7 +13,7 @@ import { useRegistrationStore } from '@/store/useRegistrationStore';
 export const SuccessPage: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { reset } = useRegistrationStore();
+  const { resetForm } = useRegistrationStore();
   
   const txHash = searchParams.get('tx');
   const ipAssetId = searchParams.get('id');
@@ -61,14 +61,14 @@ export const SuccessPage: React.FC = () => {
   }, []);
 
   const handleRegisterAnother = () => {
-    reset();
+    resetForm();
     navigate('/register');
   };
 
   const handleShareTwitter = () => {
-    const text = `I just registered my IP on Ghost Protocol! 👻✨ Ensuring eternal royalties for creators on @StoryProtocol blockchain. #GhostProtocol #Web3`;
-    const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
-    window.open(url, '_blank');
+    const text = `Just registered IP Asset on @StoryProtocol using Ghost Protocol! 👻\n\nIP Asset: ${ipAssetId}\nForever protecting creative rights! 🎨`;
+    const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
+    window.open(twitterUrl, '_blank');
   };
 
   return (

@@ -23,8 +23,104 @@ const upload = multer({
   }
 });
 
+// Pinata upload function
+async function uploadToPinata(file: any): Promise<any> {
+  try {
+    const FormData = require('form-data');
+    const axios = require('axios');
+    
+    const formData = new FormData();
+    formData.append('file', file.buffer, file.originalname || file.name);
+    
+    const pinataMetadata = JSON.stringify({
+      name: file.originalname || file.name,
+    });
+    formData.append('pinataMetadata', pinataMetadata);
+    
+    const response = await axios.post(
+      'https://api.pinata.cloud/pinning/pinFileToIPFS',
+      formData,
+      {
+        maxBodyLength: Infinity,
+        headers: {
+          'Content-Type': `multipart/form-data; boundary=${formData.getBoundary()}`,
+          'pinata_api_key': process.env.PINATA_API_KEY,
+          'pinata_secret_api_key': process.env.PINATA_SECRET_KEY,
+        },
+      }
+    );
+    
+    return {
+      ipfsHash: response.data.IpfsHash,
+      ipfsUrl: `https://gateway.pinata.cloud/ipfs/${response.data.IpfsHash}`,
+      timestamp: response.data.Timestamp,
+    };
+  } catch (error: any) {
+    console.error('Pinata upload error:', error.response?.data || error.message);
+    throw new Error('Failed to upload to IPFS: ' + (error.response?.data?.error || error.message));
+  }
+}
+
+// Groq AI analysis function
+async function analyzeContentWithGroq(textContent: string): Promise<any> {
+  try {
+    const Groq = require('groq-sdk');
+    const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+    
+    const prompt = `Analyze this creative work and extract metadata in JSON format:
+
+${textContent.substring(0, 3000)}
+
+Return ONLY a JSON object with these exact fields:
+{
+  "title": "extracted or inferred title",
+  "publicationYear": year as number or null,
+  "genre": "genre classification",
+  "description": "2-3 sentence description",
+  "detectedInfluences": ["influence1", "influence2"]
+}`;
+
+    const chatCompletion = await groq.chat.completions.create({
+      messages: [{ role: 'user', content: prompt }],
+      model: 'llama-3.3-70b-versatile',
+      temperature: 0.3,
+      max_tokens: 1000,
+    });
+    
+    const responseText = chatCompletion.choices[0]?.message?.content || '{}';
+    const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+    const analysisData = jsonMatch ? JSON.parse(jsonMatch[0]) : {};
+    
+    return {
+      success: true,
+      data: {
+        title: analysisData.title || 'Untitled',
+        publicationYear: analysisData.publicationYear || null,
+        genre: analysisData.genre || 'Unknown',
+        description: analysisData.description || 'No description available.',
+        detectedInfluences: Array.isArray(analysisData.detectedInfluences) 
+          ? analysisData.detectedInfluences 
+          : [],
+      },
+    };
+  } catch (error: any) {
+    console.error('Groq analysis error:', error.message);
+    return {
+      success: false,
+      error: error.message,
+      data: {
+        title: 'Untitled',
+        publicationYear: null,
+        genre: 'Unknown',
+        description: 'AI analysis failed. Please enter details manually.',
+        detectedInfluences: [],
+      },
+    };
+  }
+}
+
 // Extract text from different file types
-async function extractTextFromFile(file: Express.Multer.File): Promise<string> {
+async function extractTextFromFile(file: any): Promise<string> {
   const buffer = file.buffer;
 
   try {
@@ -62,7 +158,7 @@ async function extractTextFromFile(file: Express.Multer.File): Promise<string> {
 }
 
 // Upload to IPFS endpoint
-app.post('/api/upload-to-ipfs', upload.single('file'), async (req, res) => {
+app.post('/api/upload-to-ipfs', upload.single('file'), async (req: any, res: any) => {
   try {
     const file = req.file;
 
@@ -126,7 +222,7 @@ app.post('/api/upload-to-ipfs', upload.single('file'), async (req, res) => {
 });
 
 // Analyze content endpoint
-app.post('/api/analyze-content', upload.single('file'), async (req, res) => {
+app.post('/api/analyze-content', upload.single('file'), async (req: any, res: any) => {
   try {
     const file = req.file;
     const ipfsHash = req.body.ipfsHash;
@@ -188,7 +284,7 @@ app.post('/api/analyze-content', upload.single('file'), async (req, res) => {
 });
 
 // Health check endpoint
-app.get('/api/health', (req, res) => {
+app.get('/api/health', (req: any, res: any) => {
   res.json({ status: 'OK', message: 'Ghost Protocol API Server is running' });
 });
 

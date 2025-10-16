@@ -1,11 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, ArrowRight, Upload, Check, AlertCircle } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, AlertCircle } from 'lucide-react';
 import { Button, Card, Input, Progress } from '@/components/ui';
 import { cn } from '@/lib/utils';
 import { useRegistrationStore } from '@/store/useRegistrationStore';
-import { useWalletStore } from '@/store/useWalletStore';
 import { useAccount } from 'wagmi';
 import { useRegistration } from '@/hooks/useRegistration';
 import { useNetworkCheck } from '@/hooks/useNetworkCheck';
@@ -269,7 +268,7 @@ const UploadStep: React.FC = () => {
  * Creator Details Step
  */
 const CreatorDetailsStep: React.FC = () => {
-  const { formData, updateFormData, errors } = useRegistrationStore();
+  const { formData, updateFormData } = useRegistrationStore();
   return (
     <Card className="p-8">
       <h2 className="text-2xl font-semibold text-stone-900 mb-6">
