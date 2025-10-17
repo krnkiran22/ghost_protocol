@@ -4,6 +4,7 @@ import { CONTRACT_ADDRESSES } from '@/lib/contracts/addresses';
 import { GhostWalletFactoryABI } from '@/lib/contracts/GhostWalletFactoryABI';
 import { GhostWalletABI } from '@/lib/contracts/GhostWalletABI';
 
+
 /**
  * Fetch all Ghost Wallets from the blockchain
  */
