@@ -21,5 +21,6 @@ if (missingVars.length > 0) {
 }
 console.log('✅ All environment variables are configured');
 
+
 // Import and start the server
 require('./index.cjs');
