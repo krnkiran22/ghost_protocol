@@ -16,4 +16,14 @@ export default defineConfig({
       '@/hooks': path.resolve(__dirname, './src/hooks'),
     },
   },
+  optimizeDeps: {
+    exclude: ['lucide-react'],
+    esbuildOptions: {
+      target: 'esnext'
+    }
+  },
+  server: {
+    port: 5173,
+    host: true
+  }
 })
