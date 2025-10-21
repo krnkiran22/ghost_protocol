@@ -27,7 +27,7 @@ export const config = createConfig({
     }),
   ],
   transports: {
-    [STORY_NETWORK.id]: http(STORY_NETWORK.rpcUrls.default.http[0]),
+    [STORY_NETWORK.id]: http(), // Use wallet's RPC instead of explicit URL
   },
 });
 

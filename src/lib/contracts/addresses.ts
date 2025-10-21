@@ -19,10 +19,10 @@ export const STORY_NETWORK = {
   },
   rpcUrls: {
     default: {
-      http: ['https://rpc.aeneid.storyrpc.io'],
+      http: ['https://aeneid.storyrpc.io'],
     },
     public: {
-      http: ['https://rpc.aeneid.storyrpc.io'],
+      http: ['https://aeneid.storyrpc.io'],
     },
   },
   blockExplorers: {

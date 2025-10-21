@@ -73,7 +73,7 @@ export function useRegisterIPAsset() {
       console.log('📡 Calling contract:', {
         address: CONTRACT_ADDRESSES.IP_REGISTRY,
         function: 'registerIPAsset',
-        network: 'Story Odyssey (1516)',
+        network: 'Story Aeneid (1514)',
       });
 
       // Call contract with explicit gas limit
@@ -92,22 +92,55 @@ export function useRegisterIPAsset() {
         gas: 500000n, // Explicit gas limit
       });
 
-      toast.success('IP registration transaction sent!');
+      toast.success('✅ Transaction sent! Hash: ' + txHash.slice(0, 10) + '...');
       console.log('📤 Transaction hash:', txHash);
-      toast.loading('Waiting for blockchain confirmation... This may take 30-60 seconds', { 
+      console.log('🔗 Check status: https://aeneid.storyscan.io/tx/' + txHash);
+      
+      toast.loading('Waiting for blockchain confirmation... This may take 2-5 minutes on testnet', { 
         id: 'waiting-confirmation',
         duration: Infinity 
       });
 
-      // Wait for confirmation with longer timeout (5 minutes instead of default 1 minute)
-      const receipt = await publicClient!.waitForTransactionReceipt({ 
-        hash: txHash,
-        timeout: 300_000, // 5 minutes
-        pollingInterval: 2_000, // Check every 2 seconds
+      // Show link to check transaction
+      const explorerUrl = 'https://aeneid.storyscan.io/tx/' + txHash;
+      toast('🔗 View transaction on explorer', {
+        id: 'tx-link',
+        duration: Infinity,
+        icon: '�',
       });
-      
-      toast.dismiss('waiting-confirmation');
-      console.log('✅ Transaction confirmed:', receipt);
+      console.log('🔍 Check transaction status at:', explorerUrl);
+
+      // Wait for confirmation with longer timeout (10 minutes for slow testnet)
+      let receipt;
+      try {
+        receipt = await publicClient!.waitForTransactionReceipt({ 
+          hash: txHash,
+          timeout: 120_000, // 2 minutes timeout (if RPC fails, user can check manually)
+          pollingInterval: 5_000, // Check every 5 seconds
+          confirmations: 1, // Only wait for 1 confirmation
+        });
+        
+        toast.dismiss('waiting-confirmation');
+        toast.dismiss('tx-link');
+        console.log('✅ Transaction confirmed:', receipt);
+      } catch (waitError: any) {
+        toast.dismiss('waiting-confirmation');
+        toast.dismiss('tx-link');
+        
+        // If timeout or RPC error, tell user to check manually
+        if (waitError.message?.includes('timed out') || waitError.message?.includes('network')) {
+          console.log('⏱️ Confirmation timeout, but transaction was sent!');
+          toast.success('Transaction sent! Check status at: ' + explorerUrl, { duration: 10000 });
+          toast('Copy transaction hash: ' + txHash, { duration: 10000 });
+          
+          return {
+            success: true,
+            txHash,
+            message: 'Transaction sent. Check explorer for confirmation.',
+          };
+        }
+        throw waitError;
+      }
 
       // Parse event to get IP Asset ID
       const logs = parseEventLogs({
