@@ -11,7 +11,7 @@ const CONTRACT_ADDRESSES = {
   GHOST_WALLET_IMPL: '0xf73d6c9472245ed0eaf3001fca14c1608d4ccae2',
 };
 
-const STORY_RPC = 'https://rpc.odyssey.storyrpc.io';
+const STORY_RPC = 'https://rpc.aeneid.storyrpc.io';
 
 console.log('🔍 Ghost Protocol - Contract Diagnostics\n');
 console.log('═'.repeat(60));
@@ -44,7 +44,7 @@ async function checkContract(name, address) {
     } else {
       console.log('   ✅ Status: DEPLOYED');
       console.log(`   📦 Code size: ${(code.length - 2) / 2} bytes`);
-      console.log(`   🔗 Explorer: https://odyssey.storyscan.io/address/${address}`);
+      console.log(`   🔗 Explorer: https://aeneid.storyscan.io/address/${address}`);
       return true;
     }
   } catch (error) {
@@ -71,9 +71,9 @@ async function checkNetwork() {
     const data = await response.json();
     const chainId = parseInt(data.result, 16);
     
-    if (chainId === 1516) {
-      console.log('   ✅ Network: Story Protocol Odyssey Testnet');
-      console.log('   ✅ Chain ID: 1516');
+    if (chainId === 1514) {
+      console.log('   ✅ Network: Story Protocol Aeneid Testnet');
+      console.log('   ✅ Chain ID: 1514');
       console.log('   ✅ RPC: Connected');
       return true;
     } else {
@@ -154,8 +154,8 @@ async function main() {
   console.log('\n' + '═'.repeat(60));
   console.log('🔗 Useful Links:');
   console.log('═'.repeat(60));
-  console.log(`   IP Registry: https://odyssey.storyscan.io/address/${CONTRACT_ADDRESSES.IP_REGISTRY}`);
-  console.log(`   Factory: https://odyssey.storyscan.io/address/${CONTRACT_ADDRESSES.GHOST_WALLET_FACTORY}`);
+  console.log(`   IP Registry: https://aeneid.storyscan.io/address/${CONTRACT_ADDRESSES.IP_REGISTRY}`);
+  console.log(`   Factory: https://aeneid.storyscan.io/address/${CONTRACT_ADDRESSES.GHOST_WALLET_FACTORY}`);
   console.log(`   Story Faucet: https://faucet.story.foundation/`);
   console.log('');
 }
