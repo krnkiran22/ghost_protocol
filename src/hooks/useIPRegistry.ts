@@ -69,6 +69,13 @@ export function useRegisterIPAsset() {
         isDeceased: params.isDeceased,
       });
 
+      // Log contract interaction details for debugging
+      console.log('📡 Calling contract:', {
+        address: CONTRACT_ADDRESSES.IP_REGISTRY,
+        function: 'registerIPAsset',
+        network: 'Story Odyssey (1516)',
+      });
+
       // Call contract with explicit gas limit
       const txHash = await writeContractAsync({
         address: CONTRACT_ADDRESSES.IP_REGISTRY,
@@ -121,6 +128,35 @@ export function useRegisterIPAsset() {
       };
     } catch (error: any) {
       console.error('❌ IP registration error:', error);
+      console.error('❌ Error details:', {
+        message: error.message,
+        shortMessage: error.shortMessage,
+        cause: error.cause,
+        metaMessages: error.metaMessages,
+        details: error.details,
+      });
+      toast.dismiss('waiting-confirmation');
+      
+      // Check if it's a timeout error
+      if (error.message?.includes('Timed out') || error.message?.includes('timeout')) {
+        const txHash = error.message?.match(/0x[a-fA-F0-9]{64}/)?.[0];
+        
+        toast.error(
+          `Transaction sent but confirmation timed out. Check the transaction status on the explorer.`,
+          { duration: 10000 }
+        );
+        
+        console.log('⏱️ Transaction timed out. Hash:', txHash);
+        console.log('🔗 Check status at: https://odyssey.storyscan.io/tx/' + txHash);
+        
+        // Return partial success - transaction was sent
+        return {
+          success: false,
+          error: 'Transaction timeout - Check explorer for status',
+          txHash: txHash || undefined,
+          timedOut: true,
+        };
+      }
       
       // Better error messages
       let errorMessage = 'Failed to register IP Asset';
