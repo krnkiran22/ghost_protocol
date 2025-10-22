@@ -17,7 +17,6 @@ export const STORY_NETWORK = {
     symbol: 'IP',
     decimals: 18,
   },
-  
   rpcUrls: {
     default: {
       http: ['https://aeneid.storyrpc.io'],
